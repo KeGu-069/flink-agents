@@ -62,7 +62,7 @@ public class ActionJsonDeserializer extends StdDeserializer<Action> {
 
         // Deserialize listenEventTypes
         List<Class<? extends Event>> listenEventTypes = new ArrayList<>();
-        node.get("listen_event_types")
+        node.get("listenEventTypes")
                 .forEach(
                         eventTypeNode -> {
                             String eventTypeName = eventTypeNode.asText();

@@ -21,18 +21,25 @@ package org.apache.flink.agents.plan;
 import org.apache.flink.agents.api.Event;
 import org.apache.flink.agents.plan.serializer.WorkflowPlanJsonDeserializer;
 import org.apache.flink.agents.plan.serializer.WorkflowPlanJsonSerializer;
+import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
 /** Workflow plan compiled from user defined workflow. */
 @JsonSerialize(using = WorkflowPlanJsonSerializer.class)
 @JsonDeserialize(using = WorkflowPlanJsonDeserializer.class)
-public class WorkflowPlan {
-    private final Map<String, Action> actions;
-    private final Map<Class<? extends Event>, List<Action>> eventTriggerActions;
+public class WorkflowPlan implements Serializable {
+    private Map<String, Action> actions;
+    private Map<Class<? extends Event>, List<Action>> eventTriggerActions;
+
+    public WorkflowPlan() {}
 
     public WorkflowPlan(
             Map<String, Action> actions,
@@ -47,5 +54,21 @@ public class WorkflowPlan {
 
     public Map<Class<? extends Event>, List<Action>> getEventTriggerActions() {
         return eventTriggerActions;
+    }
+
+    public List<Action> getEventTriggerActions(Class<? extends Event> event) {
+        return eventTriggerActions.get(event);
+    }
+
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        String serializedStr = new ObjectMapper().writeValueAsString(this);
+        out.writeUTF(serializedStr);
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        String serializedStr = in.readUTF();
+        WorkflowPlan workflowPlan = new ObjectMapper().readValue(serializedStr, WorkflowPlan.class);
+        this.actions = workflowPlan.getActions();
+        this.eventTriggerActions = workflowPlan.getEventTriggerActions();
     }
 }
