@@ -26,14 +26,43 @@ import org.apache.flink.agents.runtime.message.Message;
 import org.apache.flink.agents.runtime.operator.ActionExecutionOperatorFactory;
 import org.apache.flink.agents.runtime.operator.FeedbackOperatorFactory;
 import org.apache.flink.agents.runtime.operator.FeedbackSinkOperator;
+import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.core.JsonProcessingException;
+import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamUtils;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
+import org.apache.flink.streaming.api.typeinfo.python.PickledByteArrayTypeInfo;
+import org.apache.flink.types.Row;
 import org.apache.flink.util.OutputTag;
 
 /** A utility class that bridges Flink DataStream/SQL with the Flink Agents workflow. */
 public class FlinkAgent {
+
+    public static DataStream<byte[]> connectToWorkflow(
+            DataStream<Row> inputDataStream, String workflowPlanJson)
+            throws JsonProcessingException {
+        // convert python InputEvent in input datastream to EventMessage.
+        DataStream<EventMessage<byte[]>> map =
+                inputDataStream
+                        .map(
+                                row ->
+                                        new EventMessage<>(
+                                                (byte[]) row.getField(0),
+                                                new PythonEvent(
+                                                        (byte[]) row.getField(1),
+                                                        "flink_agents.api.event.InputEvent")))
+                        .returns(TypeInformation.of(new TypeHint<>() {}));
+        // deserialize workflow plan json.
+        WorkflowPlan plan = new ObjectMapper().readValue(workflowPlanJson, WorkflowPlan.class);
+
+        // call internal implementation.
+        DataStream<EventMessage<byte[]>> output =
+                connectToWorkflow(map, PickledByteArrayTypeInfo.PICKLED_BYTE_ARRAY_TYPE_INFO, plan);
+        // convert EventMessage in output datastream to python OutputEvent.
+        return output.map(x -> ((PythonEvent) x.getEvent()).getEvent());
+    }
 
     /**
      * Connects the given DataStream to the Flink Agents workflow.
