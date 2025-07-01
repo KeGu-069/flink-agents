@@ -48,22 +48,25 @@ public class WorkflowPlanJsonDeserializerTest {
         assertTrue(workflowPlan.getActions().containsKey("first_action"));
         Action firstAction = workflowPlan.getActions().get("first_action");
         assertInstanceOf(JavaFunction.class, firstAction.getExec());
-        assertEquals(List.of(InputEvent.class), firstAction.getListenEventTypes());
+        assertEquals(List.of(InputEvent.class.getName()), firstAction.getListenEventTypes());
 
         // Check the second action
         assertTrue(workflowPlan.getActions().containsKey("second_action"));
         Action secondAction = workflowPlan.getActions().get("second_action");
         assertInstanceOf(JavaFunction.class, secondAction.getExec());
-        assertEquals(List.of(InputEvent.class, MyEvent.class), secondAction.getListenEventTypes());
+        assertEquals(
+                List.of(InputEvent.class.getName(), MyEvent.class.getName()),
+                secondAction.getListenEventTypes());
 
         // Check event trigger actions
         assertEquals(2, workflowPlan.getEventTriggerActions().size());
-        assertTrue(workflowPlan.getEventTriggerActions().containsKey(InputEvent.class));
+        assertTrue(workflowPlan.getEventTriggerActions().containsKey(InputEvent.class.getName()));
         assertEquals(
                 List.of(firstAction, secondAction),
-                workflowPlan.getEventTriggerActions().get(InputEvent.class));
+                workflowPlan.getEventTriggerActions().get(InputEvent.class.getName()));
         assertEquals(
-                List.of(secondAction), workflowPlan.getEventTriggerActions().get(MyEvent.class));
+                List.of(secondAction),
+                workflowPlan.getEventTriggerActions().get(MyEvent.class.getName()));
     }
 
     /**
@@ -99,7 +102,7 @@ public class WorkflowPlanJsonDeserializerTest {
                             MyAction.class.getName(),
                             "doNothing",
                             new Class[] {Event.class, RunnerContext.class}),
-                    List.of(InputEvent.class, MyEvent.class));
+                    List.of(InputEvent.class.getName(), MyEvent.class.getName()));
         }
     }
 }

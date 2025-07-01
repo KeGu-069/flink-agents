@@ -18,7 +18,6 @@
 
 package org.apache.flink.agents.plan.serializer;
 
-import org.apache.flink.agents.api.Event;
 import org.apache.flink.agents.api.InputEvent;
 import org.apache.flink.agents.api.OutputEvent;
 import org.apache.flink.agents.api.context.RunnerContext;
@@ -46,7 +45,7 @@ public class WorkflowPlanJsonSerializerTest {
                         new Class[] {InputEvent.class, RunnerContext.class});
 
         // Create an Action
-        Action action = new Action("testAction", function, List.of(InputEvent.class));
+        Action action = new Action("testAction", function, List.of(InputEvent.class.getName()));
 
         // Create a map of actions
         Map<String, Action> actions = new HashMap<>();
@@ -72,7 +71,7 @@ public class WorkflowPlanJsonSerializerTest {
         assertTrue(
                 json.contains("\"method_name\":\"legal\""), "JSON should contain the method name");
         assertTrue(
-                json.contains("\"listenEventTypes\":["),
+                json.contains("\"listen_event_types\":["),
                 "JSON should contain the listen event types");
         assertTrue(
                 json.contains("\"org.apache.flink.agents.api.InputEvent\""),
@@ -95,11 +94,11 @@ public class WorkflowPlanJsonSerializerTest {
                         new Class[] {InputEvent.class, RunnerContext.class});
 
         // Create an Action
-        Action action = new Action("testAction", function, List.of(InputEvent.class));
+        Action action = new Action("testAction", function, List.of(InputEvent.class.getName()));
 
         // Create a map of event trigger actions
-        Map<Class<? extends Event>, List<Action>> eventTriggerActions = new HashMap<>();
-        eventTriggerActions.put(InputEvent.class, List.of(action));
+        Map<String, List<Action>> eventTriggerActions = new HashMap<>();
+        eventTriggerActions.put(InputEvent.class.getName(), List.of(action));
 
         // Create a WorkflowPlan with event trigger actions but no regular actions
         WorkflowPlan workflowPlan = new WorkflowPlan(new HashMap<>(), eventTriggerActions);
@@ -135,8 +134,8 @@ public class WorkflowPlanJsonSerializerTest {
                         new Class[] {InputEvent.class, RunnerContext.class});
 
         // Create Actions
-        Action action1 = new Action("action1", function1, List.of(InputEvent.class));
-        Action action2 = new Action("action2", function2, List.of(OutputEvent.class));
+        Action action1 = new Action("action1", function1, List.of(InputEvent.class.getName()));
+        Action action2 = new Action("action2", function2, List.of(OutputEvent.class.getName()));
 
         // Create a map of actions
         Map<String, Action> actions = new HashMap<>();
@@ -144,9 +143,9 @@ public class WorkflowPlanJsonSerializerTest {
         actions.put(action2.getName(), action2);
 
         // Create a map of event trigger actions
-        Map<Class<? extends Event>, List<Action>> eventTriggerActions = new HashMap<>();
-        eventTriggerActions.put(InputEvent.class, List.of(action1));
-        eventTriggerActions.put(OutputEvent.class, List.of(action2));
+        Map<String, List<Action>> eventTriggerActions = new HashMap<>();
+        eventTriggerActions.put(InputEvent.class.getName(), List.of(action1));
+        eventTriggerActions.put(OutputEvent.class.getName(), List.of(action2));
 
         // Create a WorkflowPlan with both actions and event trigger actions
         WorkflowPlan workflowPlan = new WorkflowPlan(actions, eventTriggerActions);

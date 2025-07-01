@@ -8,7 +8,7 @@
         "parameter_types": ["org.apache.flink.agents.api.InputEvent", "org.apache.flink.agents.api.context.RunnerContext"],
         "func_type": "JavaFunction"
       },
-      "listenEventTypes": [
+      "listen_event_types": [
         "org.apache.flink.agents.api.InputEvent"
       ]
     },
@@ -20,7 +20,7 @@
         "parameter_types": ["org.apache.flink.agents.api.Event", "org.apache.flink.agents.api.context.RunnerContext"],
         "func_type": "JavaFunction"
       },
-      "listenEventTypes": [
+      "listen_event_types": [
         "org.apache.flink.agents.api.InputEvent",
         "org.apache.flink.agents.plan.serializer.WorkflowPlanJsonDeserializerTest$MyEvent"
       ]

@@ -49,7 +49,7 @@ public class PythonFunction implements Function {
     // TODO: check Python function signature compatibility with given parameter types
     @Override
     public void checkSignature(Class<?>[] parameterTypes) throws Exception {
-        throw new UnsupportedOperationException();
+        // pass
     }
 
     public String getModule() {

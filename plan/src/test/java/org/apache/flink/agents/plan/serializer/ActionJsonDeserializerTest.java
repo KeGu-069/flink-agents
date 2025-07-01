@@ -22,6 +22,7 @@ import org.apache.flink.agents.api.InputEvent;
 import org.apache.flink.agents.api.context.RunnerContext;
 import org.apache.flink.agents.plan.Action;
 import org.apache.flink.agents.plan.JavaFunction;
+import org.apache.flink.agents.plan.PythonFunction;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
@@ -30,8 +31,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Test for {@link ActionJsonDeserializer}. */
 public class ActionJsonDeserializerTest {
@@ -65,7 +66,7 @@ public class ActionJsonDeserializerTest {
 
         // Verify the deserialized Action
         assertEquals("testAction", action.getName());
-        assertTrue(action.getExec() instanceof JavaFunction);
+        assertInstanceOf(JavaFunction.class, action.getExec());
         JavaFunction javaFunction = (JavaFunction) action.getExec();
         assertEquals("org.apache.flink.agents.plan.TestAction", javaFunction.getQualName());
         assertEquals("legal", javaFunction.getMethodName());
@@ -73,7 +74,7 @@ public class ActionJsonDeserializerTest {
         assertEquals(InputEvent.class, javaFunction.getParameterTypes()[0]);
         assertEquals(RunnerContext.class, javaFunction.getParameterTypes()[1]);
         assertEquals(1, action.getListenEventTypes().size());
-        assertEquals(InputEvent.class, action.getListenEventTypes().get(0));
+        assertEquals(InputEvent.class.getName(), action.getListenEventTypes().get(0));
     }
 
     @Test
@@ -81,18 +82,16 @@ public class ActionJsonDeserializerTest {
         // Read JSON for an Action with PythonFunction from resource file
         String json = readJsonFromResource("actions/action_python_function.json");
 
-        // Deserialize the JSON to an Action
-        // Since PythonFunction's checkSignature method throws UnsupportedOperationException,
-        // we expect the deserialization to fail with an IOException
         ObjectMapper mapper = new ObjectMapper();
-        Exception exception =
-                assertThrows(Exception.class, () -> mapper.readValue(json, Action.class));
+        Action action = mapper.readValue(json, Action.class);
 
-        // Verify the exception message
-        assertTrue(
-                exception
-                        .getMessage()
-                        .contains("Failed to create Action with name \"testPythonAction\""));
+        assertEquals("testPythonAction", action.getName());
+        assertInstanceOf(PythonFunction.class, action.getExec());
+        PythonFunction pythonFunction = (PythonFunction) action.getExec();
+        assertEquals("test_module", pythonFunction.getModule());
+        assertEquals("test_function", pythonFunction.getQualName());
+        assertEquals(1, action.getListenEventTypes().size());
+        assertEquals(InputEvent.class.getName(), action.getListenEventTypes().get(0));
     }
 
     @Test
