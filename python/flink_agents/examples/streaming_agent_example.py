@@ -78,6 +78,10 @@ class ItemData(BaseModel):
 
 
 current_dir = Path(__file__).parent
+
+# if this example raises exception "No module named 'flink_agents'", you could export
+#  PYTHONPATH like "export PYTHONPATH=$VENV_HOME/lib/$PYTHON_VERSION/site-packages"
+#  before run this example. We will fix this later.
 if __name__ == "__main__":
     env = StreamExecutionEnvironment.get_execution_environment()
 
