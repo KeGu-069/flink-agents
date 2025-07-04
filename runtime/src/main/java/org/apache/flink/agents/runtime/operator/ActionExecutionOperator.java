@@ -28,11 +28,16 @@ import org.apache.flink.agents.runtime.PythonActionExecutor;
 import org.apache.flink.agents.runtime.PythonEvent;
 import org.apache.flink.agents.runtime.context.RunnerContextImpl;
 import org.apache.flink.agents.runtime.env.PythonEnvironmentManager;
+import org.apache.flink.agents.runtime.memory.MemoryObjectImpl;
 import org.apache.flink.agents.runtime.message.EventMessage;
 import org.apache.flink.api.common.state.ListState;
 import org.apache.flink.api.common.state.ListStateDescriptor;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
+import org.apache.flink.agents.runtime.python.event.PythonEvent;
+import org.apache.flink.agents.runtime.python.utils.PythonActionExecutor;
+import org.apache.flink.api.common.state.*;
+import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.python.env.PythonDependencyInfo;
 import org.apache.flink.streaming.api.operators.AbstractStreamOperator;
@@ -88,6 +93,8 @@ public class ActionExecutionOperator<K> extends AbstractStreamOperator<EventMess
     /** The number of actions that are still pending to be executed for the current key. */
     private transient ValueState<Integer> pendingActionCountState;
 
+    private transient MapState<String, MemoryObjectImpl.ValueWrapper> pendingMemoryStoreState;
+
     private final TypeInformation<EventMessage<K>> eventMessageTypeInfo;
 
     private final long pendingEventProcessInterval;
@@ -128,6 +135,14 @@ public class ActionExecutionOperator<K> extends AbstractStreamOperator<EventMess
         ListStateDescriptor<EventMessage<K>> pendingInputEventsDescriptor =
                 new ListStateDescriptor<>("pendingInputEvents", eventMessageTypeInfo);
         pendingInputEventsState = getRuntimeContext().getListState(pendingInputEventsDescriptor);
+
+        MapStateDescriptor<String, MemoryObjectImpl.ValueWrapper> pendingMemoryStoreDescriptor =
+                new MapStateDescriptor<>(
+                        "pendingMemoryStore",
+                        TypeInformation.of(new TypeHint<String>() {}),
+                        TypeInformation.of(new TypeHint<MemoryObjectImpl.ValueWrapper>() {}));
+        pendingMemoryStoreState = getRuntimeContext().getMapState(pendingMemoryStoreDescriptor);
+        runnerContext.setStore(pendingMemoryStoreState);
 
         // init PythonActionExecutor
         initPythonActionExecutor();
@@ -265,5 +280,16 @@ public class ActionExecutionOperator<K> extends AbstractStreamOperator<EventMess
             pythonActionExecutor = new PythonActionExecutor(pythonEnvironmentManager);
             pythonActionExecutor.open();
         }
+    }
+
+    private boolean hasPendingAction() throws IOException {
+        Integer pendingActionCount = pendingActionCountState.value();
+        return pendingActionCount != null && pendingActionCount > 0;
+    }
+
+    private boolean hasPendingInputEvent() throws Exception {
+        Iterable<EventMessage<K>> pendingInputEventsIterable = pendingInputEventsState.get();
+        return pendingInputEventsIterable != null
+                && pendingInputEventsIterable.iterator().hasNext();
     }
 }

@@ -26,12 +26,12 @@ import org.apache.flink.agents.runtime.message.Message;
 import org.apache.flink.agents.runtime.operator.ActionExecutionOperatorFactory;
 import org.apache.flink.agents.runtime.operator.FeedbackOperatorFactory;
 import org.apache.flink.agents.runtime.operator.FeedbackSinkOperator;
+import org.apache.flink.agents.runtime.python.event.PythonEvent;
 import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.datastream.DataStreamUtils;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.typeinfo.python.PickledByteArrayTypeInfo;
 import org.apache.flink.types.Row;
@@ -77,6 +77,9 @@ public class FlinkAgent {
             DataStream<EventMessage<K>> inputDataStream,
             TypeInformation<K> keyTypeInfo,
             WorkflowPlan workflowPlan) {
+
+        System.out.println("keyTypeInfo:" + keyTypeInfo);
+
         TypeInformation<EventMessage<K>> eventMessageTypeInfo =
                 inputDataStream.getTransformation().getOutputType();
         FeedbackKey<Message> feedbackKey = new FeedbackKey<>("feedback-pipeline", 1L);
@@ -101,8 +104,11 @@ public class FlinkAgent {
         OutputTag<EventMessage<K>> outputTag =
                 new OutputTag<>("feedback-output", eventMessageTypeInfo);
         SingleOutputStreamOperator<EventMessage<K>> actionExecuteDatastream =
-                DataStreamUtils.reinterpretAsKeyedStream(
-                                feedbackDatastream, new EventMessageKeySelector(), keyTypeInfo)
+                //                DataStreamUtils.reinterpretAsKeyedStream(
+                //                                feedbackDatastream, new EventMessageKeySelector(),
+                // keyTypeInfo)
+                feedbackDatastream
+                        .keyBy(new EventMessageKeySelector(), keyTypeInfo)
                         .transform(
                                 "action-execute",
                                 eventMessageTypeInfo,

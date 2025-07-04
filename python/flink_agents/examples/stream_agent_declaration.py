@@ -40,6 +40,11 @@ class MyWorkflow(Workflow):
     def first_action(event: Event, ctx: RunnerContext):  # noqa D102
         input = event.input
         content = input.get_review() + " first action."
+        ctx.get_short_term_memory().set("a.b",1)
+        print(ctx.get_short_term_memory().set("m",True))
+        print(ctx.get_short_term_memory().get("a").getFieldNames())
+        print(ctx.get_short_term_memory().get("a").getFields())
+        print(ctx.get_short_term_memory().get("a").get("b"))
         ctx.send_event(MyEvent(value=content))
 
     @action(MyEvent)

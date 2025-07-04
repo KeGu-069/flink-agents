@@ -38,16 +38,49 @@ class MyWorkflow(Workflow):
     @staticmethod
     def first_action(event: Event, ctx: RunnerContext): #noqa D102
         input = event.input
-        content = input + ' first_action'
+        memory = ctx.get_short_term_memory()
+
+        counter = memory.get("counter") or 0
+        memory.set("counter", counter + 1)
+        count = memory.get("counter")
+
+        if not memory.is_exist("metadata"):
+            meta_obj = memory.new_object("metadata")
+            meta_obj.set("source","web")
+            meta_obj.set("version",1)
+        else:
+            meta_obj = memory.get("metadata")
+            version = meta_obj.get("version") or 0
+            meta_obj.set("version", version + 1)
+
+        fields = meta_obj.get_fields()
+        fields_str = ", ".join(f"{k}={v}" for k, v in fields.items())
+
+        content = f"{input} -> first_action"
+        key_with_count = f"(seen {count} times)"
+
         ctx.send_event(MyEvent(value=content))
-        ctx.send_event(OutputEvent(output=content))
+        ctx.send_event(OutputEvent(output={key_with_count: content}))
 
     @action(MyEvent)
     @staticmethod
     def second_action(event: Event, ctx: RunnerContext): #noqa D102
-        input = event.value
-        content = input + ' second_action'
-        ctx.send_event(OutputEvent(output=content))
+        memory = ctx.get_short_term_memory()
+
+        counter = memory.get("counter") or 0
+        memory.set("counter", counter + 1)
+        count = memory.get("counter")
+
+        base_message = event.value.split('->')[0].strip()
+        content = f"{base_message} -> second_action"
+
+        key_with_count = f"(seen {count} times)"
+        ctx.send_event(OutputEvent(output={key_with_count: content}))
+
+        fields = memory.get_fields()
+        memory_contents = ", ".join(f"{k}: {v}" for k, v in fields.items())
+        ctx.send_event(OutputEvent(output={f"memory contents": memory_contents}))
+
 
 
 if __name__ == "__main__":
@@ -60,8 +93,11 @@ if __name__ == "__main__":
 
 
     input_list.append({'key': 'bob', 'value': 'The message from bob'})
+    input_list.append({'key': 'bob', 'value': 'Second message from bob'})
     input_list.append({'k': 'john', 'v': 'The message from john'})
-    input_list.append({'value': 'The message from unknown'}) # will automatically generate a new unique key
+    input_list.append({'key': 'john', 'value': 'Second message from john'})
+    input_list.append({'value': 'Message from unknown'})   # will automatically generate a new unique key
+    input_list.append({'value': 'Another from unknown'})
 
     env.execute()
 
