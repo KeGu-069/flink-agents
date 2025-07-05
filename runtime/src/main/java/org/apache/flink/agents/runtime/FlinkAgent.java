@@ -26,7 +26,6 @@ import org.apache.flink.agents.runtime.message.Message;
 import org.apache.flink.agents.runtime.operator.ActionExecutionOperatorFactory;
 import org.apache.flink.agents.runtime.operator.FeedbackOperatorFactory;
 import org.apache.flink.agents.runtime.operator.FeedbackSinkOperator;
-import org.apache.flink.agents.runtime.python.event.PythonEvent;
 import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.core.JsonProcessingException;

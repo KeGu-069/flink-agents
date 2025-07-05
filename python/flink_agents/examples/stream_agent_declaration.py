@@ -17,11 +17,15 @@
 #################################################################################
 from typing import Any
 
+from pyflink.datastream import StreamExecutionEnvironment
+
 from flink_agents.api.decorators import action
 from flink_agents.api.event import Event, InputEvent, OutputEvent
 from flink_agents.api.runner_context import RunnerContext
 from flink_agents.api.workflow import Workflow
 
+
+print("load custom workflow")
 
 class MyEvent(Event):  # noqa D101
     value: Any
@@ -38,11 +42,12 @@ class MyWorkflow(Workflow):
     @action(InputEvent)
     @staticmethod
     def first_action(event: Event, ctx: RunnerContext):  # noqa D102
+        print("============first action function ====")
         input = event.input
-        content = input.get_review() + " first action."
+        content = input.get_review() + " first action11111111."
         ctx.get_short_term_memory().set("a.b",1)
-        print(ctx.get_short_term_memory().set("m",True))
-        print(ctx.get_short_term_memory().get("a").getFieldNames())
+        print("state access: " + ctx.get_short_term_memory().set("m",True))
+        print("state access: " + ctx.get_short_term_memory().get("a").getFieldNames())
         print(ctx.get_short_term_memory().get("a").getFields())
         print(ctx.get_short_term_memory().get("a").get("b"))
         ctx.send_event(MyEvent(value=content))

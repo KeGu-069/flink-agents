@@ -69,6 +69,7 @@ class FlinkRunnerContext(RunnerContext):
             return FlinkMemoryObject(self._j_runner_context.getShortTermMemory())
         except Exception as e:
             err_msg = "Failed to get short-term memory of runner context"
+            print(e)
             raise RuntimeError(err_msg) from e
 
 def create_flink_runner_context(j_runner_context: Any) -> FlinkRunnerContext:

@@ -84,6 +84,7 @@ current_dir = Path(__file__).parent
 #  PYTHONPATH like "export PYTHONPATH=$VENV_HOME/lib/$PYTHON_VERSION/site-packages"
 #  before run this example. We will fix this later.
 if __name__ == "__main__":
+    print("Starting Streaming Agent")
     env = StreamExecutionEnvironment.get_execution_environment()
 
     # should compile flink-agents jars before run this example.
