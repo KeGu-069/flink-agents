@@ -25,8 +25,10 @@ from typing_extensions import override
 from flink_agents.api.event import Event, InputEvent, OutputEvent
 from flink_agents.api.runner_context import RunnerContext
 from flink_agents.api.workflow import Workflow
+from flink_agents.api.memoryobject import MemoryObject,LocalMemoryObject
 from flink_agents.plan.workflow_plan import WorkflowPlan
 from flink_agents.runtime.workflow_runner import WorkflowRunner
+
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -52,6 +54,8 @@ class LocalRunnerContext(RunnerContext):
     __workflow_plan: WorkflowPlan
     __key: Any
     events: deque[Event]
+    _store:dict
+    _short_term_memory:MemoryObject
 
     def __init__(self, workflow_plan: WorkflowPlan, key: Any) -> None:
         """Initialize a new context with the given workflow and key.
@@ -67,6 +71,8 @@ class LocalRunnerContext(RunnerContext):
         self.__workflow_plan = workflow_plan
         self.__key = key
         self.events = deque()
+        self._store = {"": {"__OBJ__": set()}}
+        self._short_term_memory = LocalMemoryObject(self._store, "")
 
     @property
     def key(self) -> Any:
@@ -91,6 +97,15 @@ class LocalRunnerContext(RunnerContext):
         logger.info("key: %s, send_event: %s", self.__key, event)
         self.events.append(event)
 
+    def get_short_term_memory(self) -> MemoryObject:
+        """Get the short-term memory object associated with this context.
+
+        Returns
+        -------
+        MemoryObject
+            The short-term memory object that can be used to access and modify temporary state data.
+        """
+        return self._short_term_memory
 
 class LocalRunner(WorkflowRunner):
     """Workflow runner implementation for local execution, which is

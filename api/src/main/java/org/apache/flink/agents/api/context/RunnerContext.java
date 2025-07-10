@@ -30,4 +30,6 @@ public interface RunnerContext {
      * @param event the event to be sent
      */
     void sendEvent(Event event);
+
+    MemoryObject getShortTermMemory() throws Exception;
 }

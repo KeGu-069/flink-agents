@@ -75,6 +75,7 @@ public class WorkflowPlanJsonDeserializer extends StdDeserializer<WorkflowPlan> 
                 Map.Entry<String, JsonNode> entry = iterator.next();
                 String eventClassName = entry.getKey();
                 JsonNode actionsArrayNode = entry.getValue();
+
                 List<Action> actionsTriggeredByEvent = new ArrayList<>();
                 for (JsonNode actionNameNode : actionsArrayNode) {
                     String actionName = actionNameNode.asText();
