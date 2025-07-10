@@ -276,7 +276,7 @@ public class ActionExecutionOperator<K> extends AbstractStreamOperator<EventMess
                             new HashMap<>(System.getenv()),
                             getRuntimeContext().getJobInfo().getJobId());
             pythonActionExecutor = new PythonActionExecutor(pythonEnvironmentManager);
-            pythonActionExecutor.open();
+            pythonActionExecutor.open(pendingMemoryStoreState);
         }
     }
 

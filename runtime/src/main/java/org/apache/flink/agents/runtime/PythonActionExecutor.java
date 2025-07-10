@@ -22,6 +22,8 @@ import org.apache.flink.agents.plan.PythonFunction;
 import org.apache.flink.agents.runtime.context.PythonRunnerContextImpl;
 import org.apache.flink.agents.runtime.env.EmbeddedPythonEnvironment;
 import org.apache.flink.agents.runtime.env.PythonEnvironmentManager;
+import org.apache.flink.agents.runtime.memory.MemoryObjectImpl;
+import org.apache.flink.api.common.state.MapState;
 import pemja.core.PythonInterpreter;
 
 import java.util.List;
@@ -49,7 +51,8 @@ public class PythonActionExecutor {
         this.runnerContext = new PythonRunnerContextImpl();
     }
 
-    public void open() throws Exception {
+    public void open(MapState<String, MemoryObjectImpl.ValueWrapper> pendingMemoryStoreState)
+            throws Exception {
         environmentManager.open();
         EmbeddedPythonEnvironment env = environmentManager.createEnvironment();
 
@@ -60,6 +63,8 @@ public class PythonActionExecutor {
         Object pythonRunnerContextObject =
                 interpreter.invoke(CREATE_FLINK_RUNNER_CONTEXT, runnerContext);
         interpreter.set(FLINK_RUNNER_CONTEXT_VAR_NAME, pythonRunnerContextObject);
+
+        runnerContext.setStore(pendingMemoryStoreState);
     }
 
     public List<Event> executePythonFunction(PythonFunction function, PythonEvent event)

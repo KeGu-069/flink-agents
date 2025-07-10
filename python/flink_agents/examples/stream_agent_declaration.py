@@ -31,6 +31,15 @@ class MyEvent(Event):  # noqa D101
     value: Any
 
 
+def list_to_str(lst):
+    return ','.join(str(x) if x is not None else '' for x in lst)
+
+def dict_to_str(d):
+    return "{" + ", ".join(
+        f"{k!r}: {v!r}" for k, v in d.items() if v is not None
+    ) + "}"
+
+
 class MyWorkflow(Workflow):
     """Workflow used for explaining integrating agents with DataStream.
 
@@ -46,10 +55,10 @@ class MyWorkflow(Workflow):
         input = event.input
         content = input.get_review() + " first action11111111."
         ctx.get_short_term_memory().set("a.b",1)
-        print("state access: " + ctx.get_short_term_memory().set("m",True))
-        print("state access: " + ctx.get_short_term_memory().get("a").getFieldNames())
-        print(ctx.get_short_term_memory().get("a").getFields())
-        print(ctx.get_short_term_memory().get("a").get("b"))
+        # print("state access: set m true," + ctx.get_short_term_memory().set("m",True))
+        print("state access: get a, fieldNames, " + list_to_str(ctx.get_short_term_memory().get("a").get_field_names()))
+        print("state access: get a fields," + dict_to_str(ctx.get_short_term_memory().get("a").get_fields()))
+        print("state access: get a get b," + str(ctx.get_short_term_memory().get("a").get("b")))
         ctx.send_event(MyEvent(value=content))
 
     @action(MyEvent)
@@ -57,4 +66,6 @@ class MyWorkflow(Workflow):
     def second_action(event: Event, ctx: RunnerContext):  # noqa D102
         input = event.value
         content = input + " second action."
+        print("state access: get a fields, " + dict_to_str(ctx.get_short_term_memory().get("a").get_fields()))
+        print("state access: get a get b," + str(ctx.get_short_term_memory().get("a").get("b")))
         ctx.send_event(OutputEvent(output=content))
