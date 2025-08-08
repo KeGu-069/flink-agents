@@ -192,10 +192,12 @@ class LocalMemoryObject(MemoryObject):
         result = {}
         for name in self.get_field_names():
             abs_path = self._full_path(name)
-            value = self.__store[abs_path]
-            result[name] = (
-                self.__NESTED_MARK if self._is_nested_object(value) else value
-            )
+            stored_item = self.__store[abs_path]
+            if self._is_nested_object(stored_item):
+                result[name] = self.__NESTED_MARK
+            else:
+                value, _ = stored_item
+                result[name] = value
         return result
 
     def _full_path(self, rel: str) -> str:
